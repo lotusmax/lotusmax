@@ -13,6 +13,10 @@ typedef struct options {
   int v;
 } opt;
 
+int string_count = 0;
+int symbol_prev = '\n';
+
+
 void cat_not_arg();
 void parser(int argc, char *argv[], opt *options);
 void reader(int argc, char *argv[], opt options);
@@ -38,7 +42,7 @@ void parser(int argc, char *argv[], opt *options) {
   };
 
   while (-1 !=
-         (opt = getopt_long(argc, argv, "+benstvTE", opts, &option_index))) {
+         (opt = getopt_long(argc, argv, "benstvTE", opts, &option_index))) {
     switch (opt) {
       case 'b':
         options->b = 1;
@@ -82,9 +86,7 @@ void reader(int argc, char *argv[], opt options) {
 
       if (fp != NULL) {
         int symbol = 0;
-        int symbol_prev = '\n';
         int flag_bool = 0;
-        int string_count = 0;
         int empty_string = 0;
 
         while ((symbol = fgetc(fp)) != EOF) {
@@ -100,7 +102,7 @@ void reader(int argc, char *argv[], opt options) {
           if (flag_bool == 0) {
             if (((options.n == 1 && options.b == 0) ||
                  (options.b == 1 && symbol != '\n')) &&
-                symbol_prev == '\n') {
+                (symbol_prev == '\n' && symbol_prev != '\t')) {
               printf("%6d\t", ++string_count);
             }
             if (options.t == 1 && symbol == '\t') {
@@ -110,7 +112,7 @@ void reader(int argc, char *argv[], opt options) {
             if (options.e == 1 && symbol == '\n') {
               printf("$");
             }
-            if (options.v == 1) {
+            if (options.v == 1 && symbol != '\n' && symbol != '\t') {
               if ((signed char)symbol < 0) {
                 putc('M', stdout);
                 putc('-', stdout);
@@ -122,9 +124,12 @@ void reader(int argc, char *argv[], opt options) {
                   putc('^', stdout);
                   symbol -= 64;
                 }
+              } else if (symbol < 32 || symbol == 127) {
+                printf("^");
+                symbol = symbol > 126 ? symbol - 128 + 64 : symbol + 64;
               }
             }
-            printf("%c", symbol);
+            putc(symbol, stdout);
             symbol_prev = symbol;
           }
         }
