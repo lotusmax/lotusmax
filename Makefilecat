@@ -1,0 +1,31 @@
+CC = gcc
+CFLAGS = -Wall -Werror -std=c11 -pedantic
+CHECK =valgrind --tool=memcheck --leak-check=yes
+
+all: s21_cat style valgrind diff test
+
+s21_cat: clean
+	$(CC) $(CFLAGS) -o s21_cat s21_cat.c
+
+style:
+	-cp ../../materials/linters/.clang-format ../../src/cat/
+	clang-format -style=Google -n *.c 
+
+valgrind:
+	valgrind --tool=memcheck --leak-check=yes ./s21_cat -benst txt2.txt
+
+diff:
+	python3 autotest.py
+test:
+	# $(CHECK) ./s21_cat $(FILE) 
+	# $(CHECK) ./s21_cat -n $(FILE) 
+	# $(CHECK) ./s21_cat -e $(FILE) 
+	# $(CHECK) ./s21_cat -t $(FILE) 
+	# $(CHECK) ./s21_cat -b $(FILE) 
+	# $(CHECK) ./s21_cat -s $(FILE) 
+	# $(CHECK) ./s21_cat -etsnb $(FILE)
+
+clean:
+	rm -f s21_cat
+	rm -f .clang-format
+
